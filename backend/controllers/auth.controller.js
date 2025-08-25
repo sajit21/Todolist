@@ -45,18 +45,38 @@ export const signup = async (req, res) => {
   }
 };
 
+export const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
 
-export const login=async(req,res)=>{   
-    try{
-        const {email,password}=req.body;
-        if(!email || !password){
-           return res.status(200).json({message: "all fields are required"});         }
+    if (!email || !password) {
+      return res.status(400).json({ message: "All fields are required" });
     }
-    finally{
-        console.log("Finally hehe prorgess model")
+
+    const users = await sql`
+      SELECT * FROM users WHERE email = ${email};
+    `;
+
+    if (users.length === 0) {
+      return res.status(404).json({ message: "User not found" });
     }
-    // console.log("login")
-}
+
+    const user = users[0];
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid password" });
+    }
+
+    
+    res.status(200).json({ message: "Login successful", user: { id: user.id, fullname: user.fullname, role: user.role, email: user.email } });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 
 export const logout=async()=>{
     console.log("logout")
