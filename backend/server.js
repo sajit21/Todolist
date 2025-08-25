@@ -1,6 +1,8 @@
 import express from "express";
 import { sql } from "./config/db.js";
 import userRoute from "./router/auth.route.js"
+import taskRoute from "./router/task.route.js"
+import cookieParser from "cookie-parser";
 // import taskRoute from "./router/task.route.js"
 const app=express();
 
@@ -8,8 +10,10 @@ const app=express();
 
 
 app.use(express.json());
+app.use(cookieParser());
 const PORT=process.env.Port || 3000;
 app.use("/api/auth",userRoute)
+app.use("/api/task",taskRoute)
 // app.use("/api/task",taskRoute)
 
 async function createUsersTable() {
@@ -52,7 +56,7 @@ async function createListTable() {
 async function startServer() {
 
   try {
-    await createUsersTable();
+    // await createUsersTable();
     await createListTable();
     app.listen(PORT, () => {
       console.log("Server is running on " + PORT);

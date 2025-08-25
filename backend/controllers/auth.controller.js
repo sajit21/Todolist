@@ -12,8 +12,9 @@ export const generateToken=async(userId,res)=>{
         res.cookie("jwt",token,{
             maxAge: 15 * 24 * 60 * 60 *1000,
             httpOnly:true,
-            sameSite:"strict",
+            sameSite:"lax",
             secure:process.env.NODE_ENV!="development"
+            // secure:false
 
         })
 
@@ -100,7 +101,8 @@ export const login = async (req, res) => {
       return res.status(401).json({ message: "Invalid password" });
     }
 
-    
+    await generateToken(user.id, res);
+
     res.status(200).json({ message: "Login successful", user: { id: user.id, fullname: user.fullname, role: user.role, email: user.email } });
 
   } catch (error) {
