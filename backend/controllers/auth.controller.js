@@ -52,6 +52,9 @@ export const login=async(req,res)=>{
         if(!email || !password){
            return res.status(200).json({message: "all fields are required"});         }
     }
+    finally{
+        console.log("Finally hehe")
+    }
     // console.log("login")
 }
 
