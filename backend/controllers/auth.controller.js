@@ -53,7 +53,7 @@ export const login=async(req,res)=>{
            return res.status(200).json({message: "all fields are required"});         }
     }
     finally{
-        console.log("Finally hehe")
+        console.log("Finally hehe prorgess model")
     }
     // console.log("login")
 }
