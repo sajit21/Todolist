@@ -51,11 +51,25 @@ export const signup = async (req, res) => {
     const salt = await bcryptjs.genSalt(10);
     const hashedPassword = await bcryptjs.hash(password, salt);
 
-    const result = await sql`
-      INSERT INTO users (fullname, username, email, password, role)
-      VALUES (${fullname}, ${username}, ${email}, ${hashedPassword}, ${role})
-      RETURNING *;
-    `;
+   const result = await sql`
+  INSERT INTO users (id, fullname, username, email, password, role)
+  VALUES (
+    COALESCE(
+      (SELECT MIN(t1.id + 1)
+       FROM users t1
+       LEFT JOIN users t2 ON t1.id + 1 = t2.id
+       WHERE t2.id IS NULL),
+      1
+    ),
+    ${fullname},
+    ${username},
+    ${email},
+    ${hashedPassword},
+    ${role}
+  )
+  RETURNING *;
+`;
+
 
     if (result && result[0]) {
       generateToken(result[0].id, res);
@@ -103,7 +117,11 @@ export const login = async (req, res) => {
 
     await generateToken(user.id, res);
 
-    res.status(200).json({ message: "Login successful", user: { id: user.id, fullname: user.fullname, role: user.role, email: user.email } });
+    res.status(200).json({ message: "Login successful", 
+      user: { id: user.id,
+         fullname: user.fullname,
+          role: user.role,
+           email: user.email } });
 
   } catch (error) {
     console.error(error);
