@@ -23,7 +23,7 @@ export const doTask = async (req, res) => {
         LEFT JOIN list t2 ON t1.id + 1 = t2.id
         WHERE t2.id IS NULL
       ),
-      1
+      
     ),
     ${studentId},
     ${priority},
