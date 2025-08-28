@@ -1,6 +1,8 @@
 import express from "express";
 import { sql } from "./config/db.js";
 import userRoute from "./router/auth.route.js"
+import taskRoute from "./router/task.route.js"
+import cookieParser from "cookie-parser";
 // import taskRoute from "./router/task.route.js"
 const app=express();
 
@@ -8,8 +10,10 @@ const app=express();
 
 
 app.use(express.json());
+app.use(cookieParser());
 const PORT=process.env.Port || 3000;
 app.use("/api/auth",userRoute)
+app.use("/api/task",taskRoute)
 // app.use("/api/task",taskRoute)
 
 async function createUsersTable() {
@@ -43,17 +47,48 @@ async function createListTable() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `;
+        //  await updateList();
+
     console.log("List table created or already exists!");
   } catch (error) {
     console.log("Something went wrong creating List table:", error.message);
   }
 }
 
+// async function updateList() {
+//   try {
+//     await sql`
+//       ALTER TABLE list
+//       ADD COLUMN student_id INT; 
+//       -- add of the table
+//     `;
+//     console.log("student_id column added successfully.");
+
+//   } catch (error) {
+//     console.error("Error while adding column:", error.message);
+//   }
+// }
+
+async function updateList() {
+  try {
+    await sql`
+      ALTER TABLE list
+      RENAME COLUMN name TO title;
+    `;
+    console.log("Column renamed successfully.");
+  } catch (error) {
+    console.error("Error while renaming column:", error.message);
+  }
+}
+
+
+
+
 async function startServer() {
 
   try {
-    await createUsersTable();
-    await createListTable();
+    // await createUsersTable();
+    // await createListTable();
     app.listen(PORT, () => {
       console.log("Server is running on " + PORT);
     });

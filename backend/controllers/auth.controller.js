@@ -12,12 +12,14 @@ export const generateToken=async(userId,res)=>{
         res.cookie("jwt",token,{
             maxAge: 15 * 24 * 60 * 60 *1000,
             httpOnly:true,
-            sameSite:"strict",
+            sameSite:"lax",
             secure:process.env.NODE_ENV!="development"
+            // secure:false
 
         })
 
 }
+
 
 export const signup = async (req, res) => {
   try {
@@ -50,11 +52,25 @@ export const signup = async (req, res) => {
     const salt = await bcryptjs.genSalt(10);
     const hashedPassword = await bcryptjs.hash(password, salt);
 
-    const result = await sql`
-      INSERT INTO users (fullname, username, email, password, role)
-      VALUES (${fullname}, ${username}, ${email}, ${hashedPassword}, ${role})
-      RETURNING *;
-    `;
+   const result = await sql`
+  INSERT INTO users (id, fullname, username, email, password, role)
+  VALUES (
+    COALESCE(
+      (SELECT MIN(t1.id + 1)
+       FROM users t1
+       LEFT JOIN users t2 ON t1.id + 1 = t2.id
+       WHERE t2.id IS NULL),
+      1
+    ),
+    ${fullname},
+    ${username},
+    ${email},
+    ${hashedPassword},
+    ${role}
+  )
+  RETURNING *;
+`;
+
 
     if (result && result[0]) {
       generateToken(result[0].id, res);
@@ -100,22 +116,32 @@ export const login = async (req, res) => {
       return res.status(401).json({ message: "Invalid password" });
     }
 
-    
-    res.status(200).json({ message: "Login successful", user: { id: user.id, fullname: user.fullname, role: user.role, email: user.email } });
+    await generateToken(user.id, res);
+
+    res.status(200).json({ message: "Login successful", 
+      user: { id: user.id,
+         fullname: user.fullname,
+          role: user.role,
+           email: user.email } });
 
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
-  }
+  } 
 };
 
 
 export const logout = async (req, res) => {
   try {
-    res.cookie("jwt", "", { maxAge: 0 });
-    res.status(200).json({ success: true, message: "successfully logout" });
+    res.cookie("jwt", "", {
+      maxAge: 0,
+      httpOnly: true,
+      secure: process.env.NODE_ENV !== "development",
+      sameSite: "lax",
+    });
+    res.status(200).json({ success: true, message: "Successfully logged out" });
   } catch (error) {
-    console.log("something went wrong", error.message);
-    req.status(500).json({ success: false, message: "internal server error" });
+    console.log("Something went wrong", error.message);
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
