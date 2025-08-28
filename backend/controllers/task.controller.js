@@ -6,25 +6,26 @@ export const doTask = async (req, res) => {
       return res.status(403).json({ message: "user is not admin" });
     }
     const { title, priority, due_date, status, studentId } = req.body;
+    console.log("values", req.body);
 
     if (!title || !priority || !studentId || !status || !due_date) {
       return res
-        .status(401)
+        .status(400)
         .json({ success: false, message: "missing fields" });
     }
 
-   const result = await sql`
-  INSERT INTO list (id, student_id, priority, title, status, due_date)
+    const result = await sql`
+  INSERT INTO list (student_id, priority, title, status, due_date)
   VALUES (
-    COALESCE(
-      (
-        SELECT MIN(t1.id + 1)
-        FROM list t1
-        LEFT JOIN list t2 ON t1.id + 1 = t2.id
-        WHERE t2.id IS NULL
-      ),
+    -- COALESCE(
+    --   (
+    --     SELECT MIN(t1.id + 1)
+    --     FROM list t1
+    --     LEFT JOIN list t2 ON t1.id + 1 = t2.id
+    --     WHERE t2.id IS NULL
+    --   ),
       
-    ),
+    -- ),
     ${studentId},
     ${priority},
     ${title},
@@ -33,7 +34,6 @@ export const doTask = async (req, res) => {
   )
   RETURNING *;
 `;
-
 
     res.status(201).json({
       success: true,
@@ -44,6 +44,28 @@ export const doTask = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+export const getTask = async (req, res) => {
+  try {
+    const { status } = req.query;
+    let result;
+
+    if (status) {
+      result = await sql`select * from list WHERE status=${status}`;
+      console.log(result);
+    } else {
+      result = await sql`select * from list`;
+    }
+
+    res
+      .status(200)
+      .json({ success: true, message: "task are fetched", data: result });
+  } catch (error) {
+    console.log("error occured ", error.message);
+    res.status(500).json({ success: false, message: "Something went wrong" });
+  }
+};
+
 
 export const updateTask = async (req, res) => {
   try {

@@ -10,9 +10,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import userTaskStore from "../store/userTaskStore";
+import toast from "react-hot-toast";
 
 const CreateTask = () => {
-  const dotask = userTaskStore((state) => state.dotask);
+  const doTask = userTaskStore((state) => state.doTask);
   const [studentId, setStudentId] = useState("");
   const [title, setTitle] = useState("");
   const [priority, setPriority] = useState("high");
@@ -21,17 +22,17 @@ const CreateTask = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await doTask({
-      student_id: studentId,
+   const taskData={
+      studentId,
       title,
       priority,
       status,
       due_date: dueDate,
-    });
-   
+    };
 
-    toast.success("Task created successfully");
-
+    await doTask(taskData);
+    // toast.success("Task created successfully");
+     //use of set 
     setStudentId("");
     setTitle("");
     setPriority("high");
